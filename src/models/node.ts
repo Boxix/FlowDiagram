@@ -28,7 +28,7 @@ export default class Node {
 }
 
 export class StartNode extends Node {
-  constructor(id: string, label: string) {
+  constructor(id: string) {
     super(id, '开始')
     this.type = NodeType.Start
   }

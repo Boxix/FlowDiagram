@@ -16,11 +16,20 @@ export class NodeData {
   type: string
   prev: string[] = []
   next: string[] = []
+  private relationNames: any = {}
 
-  constructor(id: string, label: string, type: string) {
+  constructor(id: string, type: string, label: string = '') {
     this.id = id
     this.label = label
     this.type = type
+  }
+
+  setRelation(to: string, label: string) {
+    this.relationNames[to] = label
+  }
+
+  getRelation(to: string) {
+    return this.relationNames[to]
   }
 }
 
@@ -43,7 +52,7 @@ export default class Graph {
     let rt
     switch (type) {
       case 'start':
-        rt = new StartNode(id, label)
+        rt = new StartNode(id)
         break
       case 'end':
         rt = new EndNode(id)
@@ -52,10 +61,10 @@ export default class Graph {
         rt = new TaskNode(id, label)
         break
       case 'gateway':
-        rt = new GatewayNode(id, label)
+        rt = new GatewayNode(id)
         break
       default:
-        rt = new Node(id, label)
+        rt = new Node(id)
         break
     }
     return rt
@@ -97,75 +106,91 @@ export default class Graph {
 
   private alignPaths(allPaths: Array<string[]>) {
     const maxLength: number = <number>max(map(allPaths, 'length'))
+    return allPaths.map((path: string[]) =>
+      this.moveEndNodeToTail(merge(Array(maxLength).fill(null), path))
+    )
+  }
+
+  private convertViewNode(allPaths: Array<string[]>) {
     const viewNodes: Map<string, Node> = new Map()
+
+    const convertFirstLane = (path: string[]) => {
+      return path.map((nodeId: string, column: number) => {
+        if (nodeId) {
+          const node = <NodeData>this.nodes.get(nodeId)
+          const vnode = this.createViewNode(node)
+          vnode.setLoc(0, column)
+          if (vnode instanceof GatewayNode) {
+            // 把到下一个节点的关系名写到当前网关显示的label上
+            const nextNodeId = first(node.next) || ''
+            vnode.label = node.getRelation(nextNodeId)
+          }
+          viewNodes.set(nodeId, vnode)
+          return vnode
+        } else {
+          return new PlaceholderNode()
+        }
+      })
+    }
+
     return allPaths.map((path: string[], lane: number) => {
-      const toHandle = this.moveEndNodeToTail(
-        merge(Array(maxLength).fill(null), path)
-      )
       if (lane === 0) {
-        return toHandle.map((nodeId: string, column: number) => {
-          if (nodeId) {
-            const node = <NodeData>this.nodes.get(nodeId)
-            const vnode = this.createViewNode(node)
+        return convertFirstLane(path)
+      }
+
+      let lastGateway = -1
+      const rt = []
+
+      const replaceExistViewNode = (vnode: Node, column: number) => {
+        // 替换节点
+        if (vnode instanceof EndNode) {
+          // 结束节点
+          return !path[column - 1] ? new BranchEndNode(vnode.lane) : new Node()
+        } else if (vnode instanceof TaskNode) {
+          // 任务节点
+          return column > lastGateway
+            ? new BranchEndNode(vnode.lane)
+            : new Node()
+        } else if (vnode instanceof GatewayNode) {
+          lastGateway = vnode.column
+          const node = <NodeData>this.nodes.get(path[column])
+          const label = node.getRelation(path[column + 1])
+          return new BranchStartNode(label)
+        } else if (vnode instanceof StartNode) {
+          return new Node()
+        }
+      }
+
+      for (let column = path.length - 1; column >= 0; column--) {
+        const nodeId = path[column]
+        if (nodeId) {
+          const node = <NodeData>this.nodes.get(nodeId)
+          let vnode = viewNodes.get(nodeId)
+          if (vnode) {
+            // 节点已经加入到别的泳道上
+            rt.push(replaceExistViewNode(vnode, column))
+          } else {
+            vnode = this.createViewNode(node)
             vnode.setLoc(lane, column)
             viewNodes.set(nodeId, vnode)
-            return vnode
-          } else {
-            return new PlaceholderNode()
+            rt.push(vnode)
           }
-        })
-      } else {
-        let lastGateway = -1
-        const rt = []
-        for (let column = toHandle.length - 1; column >= 0; column--) {
-          const nodeId = toHandle[column]
-          if (nodeId) {
-            const node = <NodeData>this.nodes.get(nodeId)
-            let vnode = viewNodes.get(nodeId)
-            if (vnode) {
-              // 节点已经加入到别的泳道上
-              if (vnode instanceof EndNode) {
-                // 结束节点
-                if (!toHandle[column - 1]) {
-                  rt.push(new BranchEndNode(vnode.lane))
-                } else {
-                  rt.push(new Node())
-                }
-              } else if (vnode instanceof TaskNode) {
-                // 任务节点
-                if (column > lastGateway) {
-                  rt.push(new BranchEndNode(vnode.lane))
-                } else {
-                  rt.push(new Node())
-                }
-              } else if (vnode instanceof GatewayNode) {
-                lastGateway = vnode.column
-                rt.push(new BranchStartNode())
-              } else if (vnode instanceof StartNode) {
-                rt.push(new Node())
-              }
-            } else {
-              vnode = this.createViewNode(node)
-              vnode.setLoc(lane, column)
-              viewNodes.set(nodeId, vnode)
-              rt.push(vnode)
-            }
-          } else {
-            rt.push(new PlaceholderNode())
-          }
+        } else {
+          rt.push(new PlaceholderNode())
         }
-
-        return rt.reverse()
       }
+
+      return rt.reverse()
     })
   }
 
   addEdge(edge: Edge) {
-    const { from, to } = edge
+    const { from, to, relationName } = edge
     const fromNode = this.nodes.get(from)
     const toNode = this.nodes.get(to)
     if (fromNode && toNode) {
       fromNode.next.push(to)
+      fromNode.setRelation(to, relationName)
       toNode.prev.push(from)
       this.edges.push(edge)
     }
@@ -175,7 +200,7 @@ export default class Graph {
     if (this.start) {
       const allPaths = this.scanAllPath(this.start)
       const aligned = this.alignPaths(allPaths)
-      return aligned
+      return this.convertViewNode(aligned)
     }
 
     return []
