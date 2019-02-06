@@ -1,4 +1,4 @@
-import { isEmpty, first, max, map, merge, findLastIndex } from 'lodash'
+import { isEmpty, first, max, map, merge, findLastIndex, get } from 'lodash'
 import Node, {
   StartNode,
   GatewayNode,
@@ -9,30 +9,7 @@ import Node, {
   PlaceholderNode
 } from './node'
 import Edge from './edge'
-
-export class NodeData {
-  id: string
-  label: string
-  type: string
-  prev: string[] = []
-  next: string[] = []
-  private relationNames: any = {}
-
-  constructor(id: string, type: string, label: string = '') {
-    this.id = id
-    this.label = label
-    this.type = type
-  }
-
-  setRelation(to: string, label: string) {
-    this.relationNames[to] = label
-  }
-
-  getRelation(to: string) {
-    return this.relationNames[to]
-  }
-}
-
+import NodeData from './node-data'
 export default class Graph {
   nodes: Map<string, NodeData> = new Map()
   edges: Edge[] = []
@@ -48,7 +25,7 @@ export default class Graph {
   }
 
   private createViewNode(node: NodeData) {
-    const { id, label, type } = node
+    const { id, label, type, active, current } = node
     let rt
     switch (type) {
       case 'start':
@@ -67,6 +44,8 @@ export default class Graph {
         rt = new Node(id)
         break
     }
+    rt.active = active
+    rt.current = current
     return rt
   }
 
@@ -141,7 +120,11 @@ export default class Graph {
       let lastGateway = -1
       const rt = []
 
-      const replaceExistViewNode = (vnode: Node, column: number) => {
+      const replaceExistViewNode = (
+        vnode: Node,
+        node: NodeData,
+        column: number
+      ) => {
         // 替换节点
         if (vnode instanceof EndNode) {
           // 结束节点
@@ -153,10 +136,10 @@ export default class Graph {
             : new Node()
         } else if (vnode instanceof GatewayNode) {
           lastGateway = vnode.column
-          const node = <NodeData>this.nodes.get(path[column])
           const label = node.getRelation(path[column + 1])
           return new BranchStartNode(label)
-        } else if (vnode instanceof StartNode) {
+        } else {
+          // 开始节点
           return new Node()
         }
       }
@@ -168,7 +151,10 @@ export default class Graph {
           let vnode = viewNodes.get(nodeId)
           if (vnode) {
             // 节点已经加入到别的泳道上
-            rt.push(replaceExistViewNode(vnode, column))
+            const replaced = replaceExistViewNode(vnode, node, column)
+            replaced.active = vnode.active && get(rt, `${column}.active`, false)
+            replaced.current = node.current
+            rt.push(replaced)
           } else {
             vnode = this.createViewNode(node)
             vnode.setLoc(lane, column)

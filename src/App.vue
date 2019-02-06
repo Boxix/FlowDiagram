@@ -18,8 +18,9 @@ import Node, {
   BranchEndNode
 } from './models/node'
 import Lane from './components/lane.vue'
+import NodeData from './models/node-data'
 import Edge from './models/edge'
-import Graph, { NodeData } from './models/graph'
+import Graph from './models/graph'
 
 const ids = {
   nodeId1: uniqueId('node_'),
@@ -34,15 +35,23 @@ const ids = {
   nodeId10: uniqueId('node_')
 }
 
+const newOption = (active = false, current = false) => {
+  return {
+    label: faker.name.findName(),
+    active,
+    current
+  }
+}
+
 const graph = new Graph([
-  new NodeData(ids.nodeId1, 'start', faker.name.findName()),
-  new NodeData(ids.nodeId2, 'task', faker.name.findName()),
-  new NodeData(ids.nodeId3, 'gateway'),
-  new NodeData(ids.nodeId4, 'task', faker.name.findName()),
-  new NodeData(ids.nodeId5, 'task', faker.name.findName()),
-  new NodeData(ids.nodeId6, 'end', faker.name.findName()),
-  new NodeData(ids.nodeId7, 'task', faker.name.findName()),
-  new NodeData(ids.nodeId8, 'task', faker.name.findName())
+  new NodeData(ids.nodeId1, 'start', newOption(true)),
+  new NodeData(ids.nodeId2, 'task', newOption(true)),
+  new NodeData(ids.nodeId3, 'gateway', { active: true }),
+  new NodeData(ids.nodeId4, 'task', newOption()),
+  new NodeData(ids.nodeId5, 'task', newOption()),
+  new NodeData(ids.nodeId6, 'end', newOption()),
+  new NodeData(ids.nodeId7, 'task', newOption(true, true)),
+  new NodeData(ids.nodeId8, 'task', newOption())
 ])
 
 graph.addEdge(new Edge(ids.nodeId1, ids.nodeId2))
@@ -55,8 +64,6 @@ graph.addEdge(new Edge(ids.nodeId7, ids.nodeId5))
 graph.addEdge(new Edge(ids.nodeId3, ids.nodeId8, faker.hacker.ingverb()))
 graph.addEdge(new Edge(ids.nodeId8, ids.nodeId6))
 graph.addEdge(new Edge(ids.nodeId3, ids.nodeId6))
-
-graph.toViewGraph()
 
 @Component({
   components: {

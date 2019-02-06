@@ -2,7 +2,10 @@
   <div class="lane">
     <div
       class="node"
-      :class="[`node--${node.type}`]"
+      :class="[`node--${node.type}`, {
+      'node--active': node.active,
+      'node--current': node.current
+    }]"
       v-for="(node, index) of data"
       :key="index"
     >
@@ -34,12 +37,16 @@ export default class Lane extends Vue {}
   font-size: 0;
 }
 
+@color-default: #ccc;
+@color-active: green;
+
 .node {
   display: inline-block;
   width: 120px;
   height: 80px;
   position: relative;
   font-size: 12px;
+  color: @color-default;
 
   &::after {
     content: '';
@@ -47,14 +54,26 @@ export default class Lane extends Vue {}
     left: 0;
     right: 0;
     height: 2px;
-    background: green;
+    background: @color-default;
     top: 50%;
-    margin: -1px;
+    margin-top: -1px;
     z-index: 0;
   }
 
   &--empty::after {
     background: none;
+  }
+
+  &--active {
+    color: @color-active;
+  }
+
+  &--active::before,
+  &--active::after {
+    background: @color-active !important;
+  }
+  &--active &__symbol {
+    border-color: @color-active !important;
   }
 
   &--start &__symbol,
@@ -63,10 +82,10 @@ export default class Lane extends Vue {}
     position: absolute;
     width: 16px;
     height: 16px;
-    border: 2px solid green;
-    left: 50%;
+    border: 2px solid @color-default;
+    right: 0;
     top: 50%;
-    margin: -10px 0 0 -10px;
+    margin-top: -10px;
     border-radius: 100%;
     background: #fff;
     z-index: 1;
@@ -91,10 +110,10 @@ export default class Lane extends Vue {}
     position: absolute;
     width: 16px;
     height: 16px;
-    left: 50%;
+    right: 0;
     top: 50%;
-    border: 2px solid green;
-    margin: -10px 0 0 -10px;
+    border: 2px solid @color-default;
+    margin-top: -10px;
     transform: rotate(45deg);
     background: #fff;
     z-index: 1;
@@ -111,8 +130,11 @@ export default class Lane extends Vue {}
   }
 
   &--branchStart::after {
-    left: 50%;
-    background: green;
+    left: auto;
+    right: 0;
+    width: 11px;
+    z-index: 1;
+    background: @color-default;
   }
 
   &--branchStart::before {
@@ -120,35 +142,35 @@ export default class Lane extends Vue {}
     position: absolute;
     top: -50%;
     bottom: 50%;
-    left: 50%;
-    margin-left: -1px;
+    right: 0;
+    margin-right: 9px;
     width: 2px;
-    background: green;
+    background: @color-default;
   }
 
   &--branchStart &__symbol::after {
     content: attr(label);
     position: absolute;
     bottom: 50%;
-    left: 50%;
+    left: 100%;
     margin-bottom: -20px;
     margin-left: 10px;
     white-space: nowrap;
   }
 
   &--branchEnd::after {
-    right: 50%;
-    background: green;
+    right: 9px;
+    background: @color-default;
   }
 
   &--branchEnd &__symbol {
     position: absolute;
     top: -50%;
     bottom: 50%;
-    left: 50%;
+    right: 9px;
     margin-left: -1px;
     width: 2px;
-    background: green;
+    background: @color-default;
   }
 
   &--gateway,

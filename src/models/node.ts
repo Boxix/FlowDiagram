@@ -15,6 +15,8 @@ export default class Node {
   type: NodeType = NodeType.Empty
   lane: number = -1
   column: number = -1
+  active: boolean = false
+  current: boolean = false
 
   constructor(id?: string, label?: string) {
     this.id = id || ''
