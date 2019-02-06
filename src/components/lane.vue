@@ -1,11 +1,16 @@
 <template>
   <div class="lane">
-    <div class="node" :class="[`node--${node.type}`]" v-for="node of data" :key="node.id">
+    <div
+      class="node"
+      :class="[`node--${node.type}`]"
+      v-for="(node, index) of data"
+      :key="index"
+    >
       <span
         class="node__symbol"
-        :style="[{
-        top: node.type === 'branchEnd' ? `-${(lane - (node.linkTo || 0) - 1) * 100 + 50}%` : null
-      }]"
+        :style="{
+          top: node.type === 'branchEnd' ? `-${(lane - (node.linkTo || 0) - 1) * 100 + 50}%` : null
+        }"
         :label="node.label"
       ></span>
     </div>
@@ -74,6 +79,7 @@ export default class Lane extends Vue {}
       width: 80px;
       margin-left: -40px;
       margin-bottom: 16px;
+      white-space: nowrap;
     }
   }
 
@@ -100,6 +106,7 @@ export default class Lane extends Vue {}
       left: 20px;
       transform: rotate(-45deg);
       transform-origin: top left;
+      white-space: nowrap;
     }
   }
 
@@ -126,6 +133,7 @@ export default class Lane extends Vue {}
     left: 50%;
     margin-bottom: -20px;
     margin-left: 10px;
+    white-space: nowrap;
   }
 
   &--branchEnd::after {

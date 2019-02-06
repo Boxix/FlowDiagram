@@ -13,10 +13,17 @@ export default class Node {
   id: string
   label: string
   type: NodeType = NodeType.Empty
+  lane: number = -1
+  column: number = -1
 
-  constructor(id: string, label?: string) {
-    this.id = id
+  constructor(id?: string, label?: string) {
+    this.id = id || ''
     this.label = label || ''
+  }
+
+  setLoc(lane: number, column: number) {
+    this.lane = lane
+    this.column = column
   }
 }
 
@@ -49,23 +56,23 @@ export class EndNode extends Node {
 }
 
 export class PlaceholderNode extends Node {
-  constructor(id: string) {
-    super(id)
+  constructor() {
+    super()
     this.type = NodeType.Placeholder
   }
 }
 
 export class BranchStartNode extends Node {
-  constructor(id: string, label?: string) {
-    super(id, label)
+  constructor(label?: string) {
+    super('', label)
     this.type = NodeType.BranchStart
   }
 }
 
 export class BranchEndNode extends Node {
   linkTo: number = 0
-  constructor(id: string, linkTo: number) {
-    super(id)
+  constructor(linkTo: number) {
+    super()
     this.linkTo = linkTo
     this.type = NodeType.BranchEnd
   }
