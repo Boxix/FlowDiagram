@@ -5,8 +5,9 @@
       :class="[
         `node--${node.type}`,
         {
-          'node--active': node.active,
-          'node--current': node.current
+          'node--active': node.type !== 'empty' && node.active,
+          'node--edge-active': node.type !== 'empty' && node.active && node.lanePrev && node.lanePrev.active,
+          'node--current': node.isCurrent,
         }
       ]"
       v-for="(node, index) of data"
@@ -16,7 +17,7 @@
         class="node__symbol"
         :style="{
           top:
-            node.type === 'branchEnd'
+            node.type === 'branchEnd' || node.type === 'branchStart'
               ? `-${(lane - (node.linkTo || 0) - 1) * 100 + 50}%`
               : null
         }"
@@ -39,6 +40,18 @@ export default class Lane extends Vue {}
 </script>
 
 <style lang="less">
+@keyframes pulse {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(0);
+  }
+}
+
 .lane {
   font-size: 0;
   margin-left: -100px;
@@ -70,22 +83,27 @@ export default class Lane extends Vue {}
     border: 0;
   }
 
-  &--active {
-    color: @color-active;
-  }
-
-  &--active::before,
-  &--active::after {
-    background: @color-active !important;
+  &--edge-active::after {
+    border-top: 1px solid @color-active;
   }
   &--active &__symbol {
+    color: @color-active !important;
     border-color: @color-active !important;
+    z-index: 2 !important;
+  }
+  &--active&--branchEnd &__symbol,
+  &--active&--branchStart &__symbol {
+    border-left: 1px solid @color-active;
+    z-index: 1 !important;
   }
   &--active&--branchStart::after {
     width: 6px;
     margin-right: 0;
+    border-top: 1px solid @color-active;
   }
 
+  &--current&--start &__symbol::before,
+  &--current&--end &__symbol::before,
   &--current&--task &__symbol::before {
     @size: 8px;
     content: '';
@@ -97,6 +115,8 @@ export default class Lane extends Vue {}
     top: 50%;
     left: 50%;
     margin: -@size / 2 0 0 -@size / 2;
+    will-change: transform;
+    animation: pulse 2s ease-in-out infinite;
   }
 
   &--start::after {
@@ -164,20 +184,20 @@ export default class Lane extends Vue {}
     margin-right: 2px;
   }
 
-  &--branchStart::before {
-    content: '';
+  &--branchStart &__symbol {
     position: absolute;
     top: -50%;
     bottom: 50%;
     right: 0;
     margin-right: 6px;
     border-left: 1px dashed;
+    z-index: 0;
   }
 
   &--branchStart &__symbol::after {
     content: attr(label);
     position: absolute;
-    bottom: 50%;
+    bottom: 0;
     left: 100%;
     margin-bottom: -20px;
     margin-left: 10px;
@@ -185,7 +205,7 @@ export default class Lane extends Vue {}
   }
 
   &--branchEnd::after {
-    right: 9px;
+    right: 7px;
   }
 
   &--branchEnd &__symbol {
@@ -193,13 +213,24 @@ export default class Lane extends Vue {}
     top: -50%;
     bottom: 50%;
     right: 7px;
-    margin-left: -1px;
     border-left: 1px dashed;
+    z-index: 0;
   }
 
   &--gateway,
   &--branchStart {
     width: 80px;
+  }
+
+  &--virtual {
+    width: 0;
+  }
+
+  &--virtual &__symbol::after {
+    content: attr(label);
+    position: absolute;
+    top: 50%;
+    margin-top: 4px;
   }
 }
 </style>

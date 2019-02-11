@@ -6,18 +6,18 @@ export default class NodeData {
   next: string[] = []
   active: boolean = false
   current: boolean = false
+
   private relationNames: any = {}
 
   constructor(
     id: string,
     type: string,
-    options: { label?: string; active?: boolean; current?: boolean }
+    options: { label?: string; current?: boolean }
   ) {
-    const { label, active, current } = options
+    const { label, current } = options
     this.id = id
     this.label = label || ''
     this.type = type
-    this.active = active || false
     this.current = current || false
   }
 

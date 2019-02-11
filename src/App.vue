@@ -35,35 +35,71 @@ const ids = {
   nodeId10: uniqueId('node_')
 }
 
-const newOption = (active = false, current = false) => {
+const newOption = (current = false) => {
   return {
     label: faker.name.findName(),
-    active,
     current
   }
 }
 
 const graph = new Graph([
-  new NodeData(ids.nodeId1, 'start', newOption(true)),
-  new NodeData(ids.nodeId2, 'task', newOption(true)),
-  new NodeData(ids.nodeId3, 'gateway', { active: true }),
+  new NodeData(ids.nodeId1, 'start', newOption()),
+  new NodeData(ids.nodeId2, 'task', newOption()),
+  new NodeData(ids.nodeId3, 'gateway', newOption()),
   new NodeData(ids.nodeId4, 'task', newOption()),
   new NodeData(ids.nodeId5, 'task', newOption()),
-  new NodeData(ids.nodeId6, 'end', newOption()),
-  new NodeData(ids.nodeId7, 'task', newOption(true, true)),
+  new NodeData(ids.nodeId6, 'end', newOption(true)),
+  new NodeData(ids.nodeId7, 'task', newOption()),
   new NodeData(ids.nodeId8, 'task', newOption())
 ])
 
-graph.addEdge(new Edge(ids.nodeId1, ids.nodeId2))
-graph.addEdge(new Edge(ids.nodeId2, ids.nodeId3))
-graph.addEdge(new Edge(ids.nodeId3, ids.nodeId4, faker.hacker.ingverb()))
-graph.addEdge(new Edge(ids.nodeId4, ids.nodeId5))
-graph.addEdge(new Edge(ids.nodeId5, ids.nodeId6))
-graph.addEdge(new Edge(ids.nodeId3, ids.nodeId7, faker.hacker.ingverb()))
-graph.addEdge(new Edge(ids.nodeId7, ids.nodeId5))
-graph.addEdge(new Edge(ids.nodeId3, ids.nodeId8, faker.hacker.ingverb()))
+// case 1
+graph.addEdge(new Edge(ids.nodeId1, ids.nodeId2, true))
+graph.addEdge(new Edge(ids.nodeId2, ids.nodeId3, true))
+graph.addEdge(new Edge(ids.nodeId3, ids.nodeId4, false, faker.hacker.ingverb()))
+graph.addEdge(new Edge(ids.nodeId4, ids.nodeId5, false))
+graph.addEdge(new Edge(ids.nodeId5, ids.nodeId6, false))
+graph.addEdge(new Edge(ids.nodeId3, ids.nodeId7, false, faker.hacker.ingverb()))
+graph.addEdge(new Edge(ids.nodeId7, ids.nodeId5, false))
+graph.addEdge(new Edge(ids.nodeId3, ids.nodeId8, false, faker.hacker.ingverb()))
 graph.addEdge(new Edge(ids.nodeId8, ids.nodeId6))
-graph.addEdge(new Edge(ids.nodeId3, ids.nodeId6))
+graph.addEdge(new Edge(ids.nodeId3, ids.nodeId6, true, faker.hacker.ingverb()))
+
+// case 2
+// graph.addEdge(new Edge(ids.nodeId1, ids.nodeId2, true))
+// graph.addEdge(new Edge(ids.nodeId2, ids.nodeId3, true))
+// graph.addEdge(new Edge(ids.nodeId3, ids.nodeId4, true, faker.hacker.ingverb()))
+// graph.addEdge(new Edge(ids.nodeId4, ids.nodeId5, true))
+// graph.addEdge(new Edge(ids.nodeId5, ids.nodeId6, true))
+// graph.addEdge(new Edge(ids.nodeId3, ids.nodeId7, false, faker.hacker.ingverb()))
+// graph.addEdge(new Edge(ids.nodeId7, ids.nodeId5, false))
+// graph.addEdge(new Edge(ids.nodeId3, ids.nodeId8, false, faker.hacker.ingverb()))
+// graph.addEdge(new Edge(ids.nodeId8, ids.nodeId6))
+// graph.addEdge(new Edge(ids.nodeId3, ids.nodeId6, false, faker.hacker.ingverb()))
+
+// case 3
+// graph.addEdge(new Edge(ids.nodeId1, ids.nodeId2, true))
+// graph.addEdge(new Edge(ids.nodeId2, ids.nodeId3, true))
+// graph.addEdge(new Edge(ids.nodeId3, ids.nodeId4, false, faker.hacker.ingverb()))
+// graph.addEdge(new Edge(ids.nodeId4, ids.nodeId5, false))
+// graph.addEdge(new Edge(ids.nodeId5, ids.nodeId6, false))
+// graph.addEdge(new Edge(ids.nodeId3, ids.nodeId7, true, faker.hacker.ingverb()))
+// graph.addEdge(new Edge(ids.nodeId7, ids.nodeId5, true))
+// graph.addEdge(new Edge(ids.nodeId3, ids.nodeId8, false, faker.hacker.ingverb()))
+// graph.addEdge(new Edge(ids.nodeId8, ids.nodeId6))
+// graph.addEdge(new Edge(ids.nodeId3, ids.nodeId6, false, faker.hacker.ingverb()))
+
+// case 4
+// graph.addEdge(new Edge(ids.nodeId1, ids.nodeId2, true))
+// graph.addEdge(new Edge(ids.nodeId2, ids.nodeId3, true))
+// graph.addEdge(new Edge(ids.nodeId3, ids.nodeId4, false, faker.hacker.ingverb()))
+// graph.addEdge(new Edge(ids.nodeId4, ids.nodeId5, false))
+// graph.addEdge(new Edge(ids.nodeId5, ids.nodeId6, false))
+// graph.addEdge(new Edge(ids.nodeId3, ids.nodeId7, false, faker.hacker.ingverb()))
+// graph.addEdge(new Edge(ids.nodeId7, ids.nodeId5, false))
+// graph.addEdge(new Edge(ids.nodeId3, ids.nodeId8, true, faker.hacker.ingverb()))
+// graph.addEdge(new Edge(ids.nodeId8, ids.nodeId6, true))
+// graph.addEdge(new Edge(ids.nodeId3, ids.nodeId6, false, faker.hacker.ingverb()))
 
 @Component({
   components: {
